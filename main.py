@@ -1,234 +1,207 @@
-import _thread as thread
-from os import statvfs
-import framebuf
-import machine
-from machine import Pin, I2C, ADC, PWM
-import dht
-import time
-import ssd1306
-import esp32
+# ---------- #
+
 import gc
+import socket
+import _thread as thread
+import utime
+# noinspection PyUnresolvedReferences
+from machine import Pin
+
+import debug
+import ftptiny
 # Custom imports
-from boot import ap
+import oled
+from board import AP
 
+# =============== Init Board =============== #
+gc.enable()
 
-# =============== Init Variables =============== #
-# Init Screen ------------------------
-i2c = I2C(-1, scl=Pin(22), sda=Pin(21))  # Set Pins
-oled_width = int(128)  # Width of OLED
-oled_height = int(64)  # Length of OLED
-oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
-# ------------------------------------
+btn0 = Pin(0, Pin.IN)
+btn1 = Pin(35, Pin.IN)
 
-d = dht.DHT11(machine.Pin(4, machine.Pin.PULL_UP))
-btn = Pin(0, Pin.IN)
 led = Pin(2, Pin.OUT)
-adc = ADC(Pin(35))
 
-stop_threads = False
-ScreenSelect = int(0)
-stop = 0
-
-f = int(0)
+# noinspection PyArgumentList
+machine.freq(240000000)
+debug.pprint()
+gc.collect()
 
 # ============================================== #
 
 
-def deep_sleep():
-    # pylint: disable=unexpected-arg
-    # put the device to sleep for 10 seconds
-    oled.contrast(0)
-    machine.deepsleep(10000)
+# ---------- Definitions ---------- #
+
+# def deep_sleep(ms):
+# put the device to sleep for 10 seconds
+# machine.deepsleep(ms)
 
 
-def sound():
-    pwm0 = PWM(Pin(15))
-    pwm0.freq(1567.98)
-    pwm0.duty(512)
+# ------------------------------------- #
+
+#             Nothing here              #
+
+# ------------------------------------- #
 
 
-def blink():
-    while True:
-        led.on()
-        time.sleep_ms(100)
-        led.off()
-        time.sleep_ms(1000)
-        global stop_threads
-        if stop_threads:
-            thread.exit()
+# ---------- Boot up ---------- #
+oled.fill(oled.YELLOW)
+# oled.text_long("", "", "", "", "", "", " Connecting to", " WiFi", oled.BLACK, oled.YELLOW)
+# ifinfo = STA("ROUTER", "PASS")
+ifinfo = AP("TTGO", 2, "pass")
+print("")
+
+iplist = str(ifinfo.ifconfig()[0])
+f1 = 'off'
+ftp_check = 0
+led_check = 1
+
+oled.fill(oled.RED)
+utime.sleep_ms(30)
+oled.fill(oled.GREEN)
+utime.sleep_ms(30)
+oled.fill(oled.WHITE)
+utime.sleep_ms(30)
+oled.fill(oled.BLACK)
+oled.text_long("Online", "", "", "", "", "", "", iplist, oled.WHITE, oled.BLACK)
 
 
-def get_dht11():  # get sensor info
-    while True:
+def web_page():
+    global led_check, ftp_check
 
-        global stop_threads
-        if stop_threads:
-            thread.exit()
-
-        try:
-            # Get sensor readings
-            d.measure()
-            gett = d.temperature()
-            geth = d.humidity()
-
-            # Convert celsius to fahrenheit
-            ctf = (gett * 9 / 5) + 32 - 4 # -4 was calibration for my sensor
-            TT = ctf
-            HH = geth
-            time.sleep_ms(1000)
-            return HH, TT
-
-        except OSError as e:
-            oled.fill(0)
-            oled.text_long("Error", "Failed to", "read sensor", "", "", "")
-            oled.show()
-            # thread.exit()
-            return "Failed to read sensor."
-
-# ========== Screens ========= #
-
-# screen 0 ---------
-def scralarm():
-    var = str(adc.read())
-
-    oled.fill(0)
-    oled.menu_pix(0)
-    oled.text_long("Screen", "Alarm_1 = ", var, "", "", "")
-    oled.show()
-
-
-# screen 1 ---------
-def display_dht11():
-    HH, TT = get_dht11()
-    print("temp: " + str(TT))
-    print("Humi: " + str(HH))
-    print("")
-    oled.fill(0)
-    oled.menu_pix(1)
-    oled.text_long("Sensor", "Temp = {0:0.1f}F".format(TT), "Humidity = {0:0.0f}%".format(HH), "", "", "")
-    oled.show()
-
-
-# screen 2 ---------
-def info():  # Get and display Info # SCREEN 2
-    if ap.active():
-        ip = str(ap.ifconfig()[0])
+    if led_check == 1:
+        gpio_state = "ON"
     else:
-        ip = "Wifi Off"
+        gpio_state = "OFF"
 
-    mfreq = str(machine.freq())
-    raw = str(esp32.raw_temperature())
+    if ftp_check == 1:
+        ftp_state = "ON"
+    else:
+        ftp_state = "OFF"
 
-    oled.fill(0)
-    oled.menu_pix(2)
-    oled.text_long("Info", ip, "CPU temp = " + raw + "F", "", mfreq, "", )
-    oled.show()
-    gc.collect()
+    '''
+    
+    
+    
+    NOTHING HERE    
+    
+    
+    
+    '''
 
+    # ---------- Webpage goes here ---------- #
 
-# screen 3 ---------
-def dfree():  # Display remaining free space # SCREEN 3
-    # am = str(alarmc1)
-
-    bits = statvfs('/flash')
-    # print(str(bits))
-    blksize = bits[0]  # 4096
-    blkfree = bits[3]  # 12
-    freesize = blksize * blkfree  # 49152
-    mbcalc = 1024 * 1024  # 1048576
-    mbfree = freesize / mbcalc  # 0.046875
-    freestr = str(mbfree)
-
-    oled.fill(0)
-    oled.menu_pix(3)
-    oled.text_long("Space(MB)", "Curr: " + freestr, "", "Old:  " + "1.949219", "", "")
-    oled.show()
-    gc.collect()
-
-
-# screen 4 ---------
-def draw_shapes():  # Test draw screen
-    oled.fill(0)
-    oled.menu_pix(4)
-    oled.text("Draw", 0, 0)  # Set some text
-    # oled.fill_rect(15, 15, 44, 44, 1)
-    # oled.rect(10, 10, 40, 40, 1)
-    # oled.line(0,0,64,64,1)
-    # oled.triangle(10, 10, 55, 20, 5, 40, 1)
-    # oled.circle(64, 32, 10, 1)
-    oled.round_rect(20, 20, 30, 30, 3, 1)
-    oled.show()
-
-
-# screen 5 ---------
-def showlogo():
-    fb_smile1 = framebuf.FrameBuffer(bytearray(b'\x00~\x00\x03\xff\xc0\x07\x81\xe0\x1e\x00x8\x00\x1c0\x00\x0c`\x00\x0ea\xc3\x86\xe0\x00\x07\xc0\x00\x03\xc0\x00\x03\xc0\x00\x02\xc0\x00\x03\xc0\x00\x03\xe0B\x07`<\x06`\x00\x060\x00\x0c8\x00\x1c\x1e\x00x\x07\x81\xe0\x03\xff\xc0\x00\xff\x00'), 24, 23, framebuf.MONO_HLSB)
-
-    oled.fill(0)
-    oled.framebuf.blit(fb_smile1, 0, 20)
-    oled.text("Logo", 0, 0)
-    oled.text("Hello", 30, 23)
-    oled.text("MicroPython", 30, 33)
-    oled.menu_pix(5)
-    oled.show()
+    html = """
+    <html>
+      <head> 
+      <title>ESP Web Server</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="icon" href="data:,">
+        <style>
+          html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
+          body{background-color: black;}
+          h1{color: #0F3376; padding: 2vh;}
+          p{color: white; font-size: 1.2rem;}
+          .button{display: inline-block; background-color: #e7bd3b; border: none; border-radius: 4px; color: white; padding: 16px 40px; text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}
+          .button2{background-color: #4286f4;}
+          .button3{background-color: #F286f4;}
+          .button4{background-color: #9d2424;}
+        </style>
+      </head>
+      <body> 
+        <h1>ESP Web Server</h1> 
+        <p>Backlight:  <strong>""" + gpio_state + """</strong></p>
+        <p>FTP Server:  <strong>""" + ftp_state + """</strong></p>
+        <p></p>
+        <p><a href="/?led=on">  <button class="button button">ON</button>     </a></p>
+        <p><a href="/?led=off"> <button class="button button2">OFF</button>   </a></p>
+        <p><a href="/?ftp=on">  <button class="button button3">FTP</button>   </a></p>
+        <p><a href="/?reset">   <button class="button button4">RESET</button> </a></p>
+      </body>
+    </html>
+    """
+    return html
 
 
-# =========================== #
-
-
-# ------------------------------------ #
-
-def my_func(self):  # push button tests
-    global stop_threads
-    global ScreenSelect
-
-    # stop_threads = True
-    led.on()
-    ScreenSelect += 1
-    led.off()
-
-    print(ScreenSelect)
-
-
-# ------------------------------------ #
-
-# ttt = thread.start_new_thread(test, ())
-# bbb = thread.start_new_thread(blink, ())
-thread.start_new_thread(get_dht11, ())
-
-# Boot up flash!
-oled.fill(1)
-oled.show()
-time.sleep_ms(1000)
+'''
 
 
 
+NOTHING HERE
 
 
-# ------------ Main Loop ------------- #
-while True:
-    btn.irq(my_func, Pin.IRQ_RISING)
 
-# -------------------
+'''
 
-    if ScreenSelect > 5:
+
+def sleep_7sec():
+    global count
+    while True:
+        # gc.collect()
+        mem = gc.mem_free()
+
+        oled.text_long("Online", "", str(mem), "", "", "", "", iplist, oled.WHITE, oled.BLACK)
+
+        utime.sleep(5)
+
+
+# ---------- Init webpage vars ---------- #
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.setblocking(False)
+s.bind(('', 80))
+s.listen(5)
+# s.settimeout(1.0)
+
+
+# --------- RUN --------- #
+def web_runner():
+    global led_check, ftp_check
+    while True:
+        conn, addr = s.accept()
+        print('Got a connection from %s' % str(addr))
+        request = conn.recv(1024)
+        request = str(request)
+        print('Content = %s' % request)
+        utime.sleep_ms(20)
         gc.collect()
-        ScreenSelect = 0
 
-    if ScreenSelect == 0:
-        scralarm()
+        led_on = request.find('/?led=on')
+        led_off = request.find('/?led=off')
 
-    if ScreenSelect == 1:
-        display_dht11()
+        ftp_on = request.find('/?ftp=on')
 
-    if ScreenSelect == 2:
-        info()
+        reset = request.find('/?reset')
 
-    if ScreenSelect == 3:
-        dfree()
+        # text
+        if led_on == 6:
+            print('LED ON')
+            led_check = 1
+            oled.backlight(1)
 
-    if ScreenSelect == 4:
-        draw_shapes()
+        if led_off == 6:
+            print('LED OFF')
+            led_check = 0
+            oled.backlight(0)
 
-    if ScreenSelect == 5:
-        showlogo()
+        if ftp_on == 6:
+            print('FTP ON')
+            ftp_check = 1
+            ftp = ftptiny.FtpTiny()  # create one
+            ftp.start()  # start an ftp thread
+
+        if reset == 6:
+            machine.deepsleep(500)
+
+        response = web_page()
+        # noinspection PyTypeChecker
+        conn.send('HTTP/1.1 200 OK\n')
+        # noinspection PyTypeChecker
+        conn.send('Content-Type: text/html\n')
+        # noinspection PyTypeChecker
+        conn.send('Connection: close\n\n')
+        # noinspection PyTypeChecker
+        conn.sendall(response)
+        conn.close()
+
+
+thread.start_new_thread(web_runner, ())
+thread.start_new_thread(sleep_7sec, ())
