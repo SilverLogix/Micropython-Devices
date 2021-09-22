@@ -1,11 +1,22 @@
 import micropython
+import gc
 import machine
-# noinspection PyUnresolvedReferences
-from machine import Pin
+import gfx
+import webrepl
+from utime import sleep_ms
 
+
+# DO NOT GO BELOW 80Mhz!!!  Will break wifi and complicate serial!
 # noinspection PyArgumentList
 machine.freq(240000000)
-micropython.alloc_emergency_exception_buf(100)
+sleep_ms(100)
 
-print(str('Booting...'))
-btn = Pin(35, Pin.IN)  # Gpio 35 as button
+micropython.alloc_emergency_exception_buf(100)
+print('Booting...')
+
+gfx.boot()
+
+webrepl.start(password="password")
+
+gc.enable()
+gc.collect()

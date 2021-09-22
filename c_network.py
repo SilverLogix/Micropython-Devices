@@ -1,7 +1,7 @@
+import network
 
-# ---------- Connect to a router ---------- #
+
 def STA(ssid, passw):
-    import network
     st = network.WLAN(network.STA_IF)
     st.active(True)
     st.connect(ssid, passw)
@@ -13,10 +13,7 @@ def STA(ssid, passw):
     print(st.ifconfig())
 
 
-# --------- Create a Hotspot ---------- #
 def AP(ssid, maxc, on):
-    import network
-
     ap = network.WLAN(network.AP_IF)
     ap.config(essid=ssid)
     ap.config(max_clients=maxc)

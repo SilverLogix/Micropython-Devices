@@ -1,11 +1,10 @@
-# ----------- #
-
-# noinspection PyUnresolvedReferences
-from micropython import const
+# ----------#
 import st7789 as st
-# noinspection PyUnresolvedReferences
 from machine import Pin, SPI
+from micropython import const
 
+
+# noinspection PyArgumentList
 
 tft = st.ST7789(
     SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
@@ -17,6 +16,8 @@ tft = st.ST7789(
     rotation=3)
 tft.init()
 
+ST77XX_DISPOFF = const(0x28)
+ST77XX_DISPON = const(0x29)
 
 BLACK = const(0x0000)
 BLUE = const(0x001F)
@@ -26,6 +27,28 @@ CYAN = const(0x07FF)
 MAGENTA = const(0xF81F)
 YELLOW = const(0xFFE0)
 WHITE = const(0xFFFF)
+
+
+def backlight(swt):
+    global tft
+    if swt == 1:
+        tft = st.ST7789(
+            SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
+            135, 240,
+            reset=Pin(23, Pin.OUT),
+            cs=Pin(5, Pin.OUT),
+            dc=Pin(16, Pin.OUT),
+            backlight=Pin(4, Pin.OUT),
+            rotation=3)
+    if swt == 0:
+        tft = st.ST7789(
+            SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
+            135, 240,
+            reset=Pin(23, Pin.OUT),
+            cs=Pin(5, Pin.OUT),
+            dc=Pin(16, Pin.OUT),
+            backlight=Pin(4, Pin.IN),
+            rotation=3)
 
 
 def fill(col):
@@ -202,25 +225,3 @@ def micrologo(col=BLACK):
     tft.fill(col)
     tft.jpg('logo.jpg', 0, 0, 1)
     tft.text(font, " MICROPYTHON ", int(tft.width() / 2 - 105), int(tft.height() - 18), WHITE, 0)
-
-
-def backlight(swt):
-    global tft
-    if swt == 1:
-        tft = st.ST7789(
-            SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
-            135, 240,
-            reset=Pin(23, Pin.OUT),
-            cs=Pin(5, Pin.OUT),
-            dc=Pin(16, Pin.OUT),
-            backlight=Pin(4, Pin.OUT),
-            rotation=3)
-    if swt == 0:
-        tft = st.ST7789(
-            SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
-            135, 240,
-            reset=Pin(23, Pin.OUT),
-            cs=Pin(5, Pin.OUT),
-            dc=Pin(16, Pin.OUT),
-            backlight=Pin(4, Pin.IN),
-            rotation=3)
