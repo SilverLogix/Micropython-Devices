@@ -6,37 +6,37 @@ from micropython import const
 import ustruct as struct
 
 # commands
-ST7789_NOP = const(0x00)
+ST7789_NOP     = const(0x00)
 ST7789_SWRESET = const(0x01)
-ST7789_RDDID = const(0x04)
-ST7789_RDDST = const(0x09)
+ST7789_RDDID   = const(0x04)
+ST7789_RDDST   = const(0x09)
 
-ST7789_SLPIN = const(0x10)
+ST7789_SLPIN  = const(0x10)
 ST7789_SLPOUT = const(0x11)
-ST7789_PTLON = const(0x12)
-ST7789_NORON = const(0x13)
+ST7789_PTLON  = const(0x12)
+ST7789_NORON  = const(0x13)
 
-ST7789_INVOFF = const(0x20)
-ST7789_INVON = const(0x21)
+ST7789_INVOFF  = const(0x20)
+ST7789_INVON   = const(0x21)
 ST7789_DISPOFF = const(0x28)
-ST7789_DISPON = const(0x29)
-ST7789_CASET = const(0x2A)
-ST7789_RASET = const(0x2B)
-ST7789_RAMWR = const(0x2C)
-ST7789_RAMRD = const(0x2E)
+ST7789_DISPON  = const(0x29)
+ST7789_CASET   = const(0x2A)
+ST7789_RASET   = const(0x2B)
+ST7789_RAMWR   = const(0x2C)
+ST7789_RAMRD   = const(0x2E)
 
-ST7789_PTLAR = const(0x30)
+ST7789_PTLAR   = const(0x30)
 ST7789_VSCRDEF = const(0x33)
-ST7789_COLMOD = const(0x3A)
-ST7789_MADCTL = const(0x36)
-ST7789_VSCSAD = const(0x37)
+ST7789_COLMOD  = const(0x3A)
+ST7789_MADCTL  = const(0x36)
+ST7789_VSCSAD  = const(0x37)
 
-ST7789_MADCTL_MY = const(0x80)
-ST7789_MADCTL_MX = const(0x40)
-ST7789_MADCTL_MV = const(0x20)
-ST7789_MADCTL_ML = const(0x10)
+ST7789_MADCTL_MY  = const(0x80)
+ST7789_MADCTL_MX  = const(0x40)
+ST7789_MADCTL_MV  = const(0x20)
+ST7789_MADCTL_ML  = const(0x10)
 ST7789_MADCTL_BGR = const(0x08)
-ST7789_MADCTL_MH = const(0x04)
+ST7789_MADCTL_MH  = const(0x04)
 ST7789_MADCTL_RGB = const(0x00)
 
 ST7789_RDID1 = const(0xDA)
@@ -44,25 +44,15 @@ ST7789_RDID2 = const(0xDB)
 ST7789_RDID3 = const(0xDC)
 ST7789_RDID4 = const(0xDD)
 
-COLOR_MODE_65K = const(0x50)
-COLOR_MODE_262K = const(0x60)
+COLOR_MODE_65K   = const(0x50)
+COLOR_MODE_262K  = const(0x60)
 COLOR_MODE_12BIT = const(0x03)
 COLOR_MODE_16BIT = const(0x05)
 COLOR_MODE_18BIT = const(0x06)
-COLOR_MODE_16M = const(0x07)
-
-# Color definitions
-BLACK = const(0x0000)
-BLUE = const(0x001F)
-RED = const(0xF800)
-GREEN = const(0x07E0)
-CYAN = const(0x07FF)
-MAGENTA = const(0xF81F)
-YELLOW = const(0xFFE0)
-WHITE = const(0xFFFF)
+COLOR_MODE_16M   = const(0x07)
 
 _ENCODE_PIXEL = ">H"
-_ENCODE_POS = ">HH"
+_ENCODE_POS   = ">HH"
 _DECODE_PIXEL = ">BBB"
 
 _BUFFER_SIZE = const(256)
@@ -97,15 +87,29 @@ WIDTH_135 = [(135, 240, 52, 40),
 ROTATIONS = [0x00, 0x60, 0xc0, 0xa0]
 
 
-def color565(red, green=0, blue=0):
-    """
-    Convert red, green and blue values (0-255) into a 16-bit 565 encoding.
-    """
-    try:
-        red, green, blue = red  # see if the first var is a tuple/list
-    except TypeError:
-        pass
-    return (red & 0xf8) << 8 | (green & 0xfc) << 3 | blue >> 3
+@micropython.native
+def clamp(aValue, aMin, aMax):
+    return max(aMin, min(aMax, aValue))
+
+
+@micropython.native
+def color565(aR, aG, aB):
+    return ((aR & 0xF8) << 8) | ((aG & 0xFC) << 3) | (aB >> 3)
+
+
+# Color definitions
+BLACK   = 0
+RED     = color565(0xFF, 0x00, 0x00)
+MAROON  = color565(0x80, 0x00, 0x00)
+GREEN   = color565(0x00, 0xFF, 0x00)
+FOREST  = color565(0x00, 0x80, 0x80)
+BLUE    = color565(0x00, 0x00, 0xFF)
+NAVY    = color565(0x00, 0x00, 0x80)
+CYAN    = color565(0x00, 0xFF, 0xFF)
+YELLOW  = color565(0xFF, 0xFF, 0x00)
+PURPLE  = color565(0xFF, 0x00, 0xFF)
+WHITE   = color565(0xFF, 0xFF, 0xFF)
+GRAY    = color565(0x80, 0x80, 0x80)
 
 
 def _encode_pos(x, y):
