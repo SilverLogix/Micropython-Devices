@@ -1,5 +1,7 @@
+# ---------- #
 
-def space_free():  # Display remaining free space
+
+def space_free():   # Display remaining free space
     from os import statvfs
 
     bits = statvfs('/flash')
@@ -12,7 +14,7 @@ def space_free():  # Display remaining free space
     print("Free space:" + str(mbfree))
 
 
-def m_freq():
+def m_freq():   # Get current machine Freq
     import machine
 
     gfr = str(machine.freq())
@@ -22,7 +24,7 @@ def m_freq():
     return gfr
 
 
-def raw_temp():
+def raw_temp():   # Get current CPU temp
     import esp32
 
     raw = str(esp32.raw_temperature())
@@ -32,7 +34,7 @@ def raw_temp():
     return rrr
 
 
-def showVoltage():
+def showVoltage():   # Show current(pun intended) used Voltage
     # noinspection PyUnresolvedReferences
     from machine import ADC, Pin
 
@@ -49,15 +51,27 @@ def showVoltage():
     return ddd
 
 
-def pprint():
+def getmac():   # Get and display chip MAC address
+    import network
+    import ubinascii
+    mac = ubinascii.hexlify(network.WLAN(1).config('mac'), ':').decode()
+    print(str(mac))
+
+
+def pprint():   # Put it all together and PRINT
+    import gc
+
     print("")
     print("-------------------")
+    getmac()
     space_free()
     m_freq()
     raw_temp()
     showVoltage()
     print("--------------------")
     print("")
+
+    gc.collect()
 
 
 '''

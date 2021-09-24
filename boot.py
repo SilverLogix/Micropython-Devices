@@ -1,7 +1,8 @@
-import micropython
+# ---------- #
+
+
 import machine
-# noinspection PyUnresolvedReferences
-from machine import Pin
+import micropython
 
 # noinspection PyArgumentList
 machine.freq(240000000)

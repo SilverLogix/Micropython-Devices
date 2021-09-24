@@ -4,13 +4,19 @@
 
 <h3> </h3>
 
-MicroPython for bare ESP32 IOT Web System
+MicroPython for bare ESP32 personal code testing branch
 =======================
-<h2>w/ FTP updates</h2>
+
 <p align="center">
   <img src='image/wroom.png/'>
 </p>
-<h3> </h3>
-<h3>
-<A HREF="https://github.com/SilverLogix/ESP32-Web-System/releases/tag/v1.1">Latest Update</a>
-</h3>
+
+### DO NOT USE!!!
+** **
+
+
+    esptool.py --port /dev/ttyUSB0 erase_flash
+
+<p> </p>
+
+    esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash -z 0x1000 ttgo-v1.1.1-firmware.bin
