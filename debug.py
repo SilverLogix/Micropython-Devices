@@ -6,7 +6,54 @@
 
 # noinspection PyUnusedLocal
 @micropython.native
+def pro_and_mem(f, *args, **kwargs):
+    import utime
+    import gc
+
+    gc.collect()
+    im = gc.mem_free()
+    funcname = str(f).split(' ')[1]
+
+    # noinspection PyShadowingNames
+    @micropython.native
+    def funcmem(*args, **kwargs):
+        t = utime.ticks_us()
+        result = f(*args, **kwargs)
+        delta = utime.ticks_diff(utime.ticks_us(), t)
+        ou = gc.mem_free()
+        # print(im)
+        # print(ou)
+        print(f"Function ({funcname}) took = {delta / 1000:6.3f}ms and used {im-ou} of memory \n")
+        return result
+    return funcmem
+
+
+''' ------------------------------------------------- '''
+
+
+# noinspection PyUnusedLocal
+@micropython.native
 def profile(f, *args, **kwargs):
+    import utime
+    myname = str(f).split(' ')[1]
+
+    # noinspection PyShadowingNames
+    @micropython.native
+    def new_fun(*args, **kwargs):
+        t = utime.ticks_us()
+        result = f(*args, **kwargs)
+        delta = utime.ticks_diff(utime.ticks_us(), t)
+        print(f"Function ({myname}) time = {delta/1000:6.3f}ms \n")
+        return result
+    return new_fun
+
+
+''' ------------------------------------------------- '''
+
+
+# noinspection PyUnusedLocal
+@micropython.native
+def profile_total(f, *args, **kwargs):
     ncalls = 0
     ttime = 0.0
 
@@ -21,10 +68,52 @@ def profile(f, *args, **kwargs):
         delta = utime.ticks_diff(utime.ticks_us(), t)
         ncalls += 1
         ttime += delta
-        print('Function: {} Call count = {} Total time = {:6.3f}ms'.format(f.__name__, ncalls, ttime / 1000) + "\n")
+        print(f"Function: ({f.__name__}) Call count = {ncalls} | Total time = {ttime/1000:6.3f}ms \n")
         return result
 
     return new_func
+
+
+''' ------------------------------------------------- '''
+
+
+# noinspection PyUnusedLocal
+@micropython.native
+def used_mem(f, *args, **kwargs):
+    import gc
+    gc.collect()
+    im = gc.mem_free()
+    name = str(f).split(' ')[1]
+
+    # noinspection PyShadowingNames
+    @micropython.native
+    def new_mem(*args, **kwargs):
+        result = f(*args, **kwargs)
+        ou = gc.mem_free()
+        to = (im - ou)
+        print(f"Function ({name}) used memory = {to} \n")
+        return result
+    return new_mem
+
+
+''' ------------------------------------------------- '''
+
+
+# noinspection PyUnusedLocal
+@micropython.native
+def profile(f, *args, **kwargs):
+    import utime
+    myname = str(f).split(' ')[1]
+
+    # noinspection PyShadowingNames
+    @micropython.native
+    def new_fun(*args, **kwargs):
+        t = utime.ticks_us()
+        result = f(*args, **kwargs)
+        delta = utime.ticks_diff(utime.ticks_us(), t)
+        print(f"Function ({myname}) time = {delta/1000:6.3f}ms \n")
+        return result
+    return new_fun
 
 
 ''' ------------------------------------------------- '''
@@ -46,7 +135,7 @@ def serial_mem(mp: bool):   # Using True displays a map in the serial output
 def files():
     import os
     dirr = str(os.listdir())
-    print("Files: " + dirr)
+    print(f"Files: {dirr}")
 
 
 """ ================================================= """
@@ -63,14 +152,7 @@ def space_free():   # Display remaining free space
     freesize = blksize * blkfree  # 49152
     mbcalc = 1024 * 1024  # 1048576
     mbfree = freesize / mbcalc  # 0.046875
-    print("Flash: " + str(mbfree) + "MB")
-
-
-@micropython.viper
-def getram():
-    import gc
-    rfree = str(gc.mem_free())
-    print("RAM: " + rfree)
+    print(f"Flash: {mbfree}MB")
 
 
 @micropython.viper
@@ -96,7 +178,7 @@ def raw_temp():   # Get current CPU temp
 
 
 @micropython.native
-def showVoltage():   # Show current(pun intended) used Voltage
+def show_voltage():   # Show current(pun intended) used Voltage
     # noinspection PyUnresolvedReferences
     from machine import ADC, Pin
 
@@ -114,26 +196,24 @@ def showVoltage():   # Show current(pun intended) used Voltage
 
 
 @micropython.viper
-def getmac():   # Get and display chip MAC address
+def get_mac():   # Get and display chip MAC address
     import network
     import ubinascii
     mac = ubinascii.hexlify(network.WLAN(1).config('mac'), ':').decode()
-    print(str("MAC: " + mac))
+    print(f"MAC: {mac}")
 
 
-def pprint():   # Put it all together and PRINT
+@micropython.native
+def b_print():   # Put it all together and PRINT
     import gc
 
-    print("")
-    print("-------------------")
-    getmac()
+    print(f"\n-------------------")
+    get_mac()
     space_free()
-    getram()
     m_freq()
     raw_temp()
-    showVoltage()
+    show_voltage()
     files()
-    print("--------------------")
-    print("")
+    print(f"-------------------- \n")
 
     gc.collect()
