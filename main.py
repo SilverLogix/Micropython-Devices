@@ -1,16 +1,15 @@
 # ---------- #
 
-
 from machine import Pin, SoftSPI
-import random
 import gc
-import _thread
+import utime
+import random
 
 # Custom imports
-import st7789
-import font
 from debug import b_print
 from debug import pro_and_mem
+import st7789
+import font
 
 
 # noinspection PyArgumentList
@@ -30,11 +29,15 @@ def oled_init():
 
 
 tft = oled_init()
+gc.collect()
 
 
 @pro_and_mem
-def run():
+def flash_text():
+
+    utime.sleep_ms(50)
     gc.collect()
+
     for rotation in range(4):
         tft.rotation(rotation)
         tft.fill(st7789.BLACK)
@@ -60,10 +63,5 @@ def run():
 # ----------------------------------------------------------- #
 
 
-def loop():
-    while True:
-        run()
-
-
-_thread.start_new_thread(loop, ())
-""" Runing function in thread uses ALOT more memory"""
+while True:
+    flash_text()

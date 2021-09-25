@@ -161,8 +161,7 @@ def m_freq():   # Get current machine Freq
 
     gfr = str(machine.freq())
 
-    print("Mhz: " + gfr)
-    return gfr
+    print(f"Mhz: {gfr}")
 
 
 @micropython.viper
@@ -170,29 +169,23 @@ def raw_temp():   # Get current CPU temp
     import esp32
 
     raw = str(esp32.raw_temperature())
-    rtemp = ("CPU Temp: " + raw + "F")
-    print(rtemp)
-
-    rrr = rtemp
-    return rrr
+    print(f"CPU Temp: {raw}F")
 
 
 @micropython.native
 def show_voltage():   # Show current(pun intended) used Voltage
     # noinspection PyUnresolvedReferences
     from machine import ADC, Pin
+    import utime
 
     adc = ADC(Pin(32))
-
     vref = int(1100)
 
+    utime.sleep_ms(100)
     v = adc.read()
+    utime.sleep_ms(100)
     battery_voltage = (float(v) / 4095.0) * 2.0 * 3.3 * (vref / 1000.0)
-    voltage = ("Voltage: {0:0.2f}v".format(battery_voltage))
-    print(voltage)
-
-    ddd = voltage
-    return ddd
+    print(f"Voltage: {battery_voltage:0.2f}v")
 
 
 @micropython.viper
