@@ -87,6 +87,7 @@ WIDTH_135 = [(135, 240, 52, 40),
 # MADCTL ROTATIONS[rotation % 4]
 ROTATIONS = [0x00, 0x60, 0xc0, 0xa0]
 
+
 @micropython.native
 def color565(aR, aG, aB):
     return ((aR & 0xF8) << 8) | ((aG & 0xFC) << 3) | (aB >> 3)

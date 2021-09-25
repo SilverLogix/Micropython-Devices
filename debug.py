@@ -1,6 +1,45 @@
 # ---------- #
 
 
+""" ========== from debug import "MODULE" ========= """
+
+
+# noinspection PyUnusedLocal
+@micropython.native
+def profile(f, *args, **kwargs):
+    ncalls = 0
+    ttime = 0.0
+
+    # noinspection PyShadowingNames
+    @micropython.native
+    def new_func(*args, **kwargs):
+        import utime
+
+        nonlocal ncalls, ttime
+        t = utime.ticks_us()
+        result = f(*args, **kwargs)
+        delta = utime.ticks_diff(utime.ticks_us(), t)
+        ncalls += 1
+        ttime += delta
+        print('Function: {} Call count = {} Total time = {:6.3f}ms'.format(f.__name__, ncalls, ttime / 1000))
+        return result
+
+    return new_func
+
+
+''' ------------------------------------------------- '''
+
+
+@micropython.viper
+def serial_mem(mp: bool):
+    import micropython
+    micropython.mem_info(mp)
+
+
+""" ================================================= """
+
+
+@micropython.native
 def space_free():   # Display remaining free space
     from os import statvfs
 
@@ -11,29 +50,39 @@ def space_free():   # Display remaining free space
     freesize = blksize * blkfree  # 49152
     mbcalc = 1024 * 1024  # 1048576
     mbfree = freesize / mbcalc  # 0.046875
-    print("Free space:" + str(mbfree))
+    print("Flash: " + str(mbfree) + "MB")
 
 
+@micropython.viper
+def getram():
+    import gc
+    rfree = str(gc.mem_free())
+    print("RAM: " + rfree)
+
+
+@micropython.viper
 def m_freq():   # Get current machine Freq
     import machine
 
     gfr = str(machine.freq())
 
     print("Mhz: " + gfr)
-
     return gfr
 
 
+@micropython.viper
 def raw_temp():   # Get current CPU temp
     import esp32
 
     raw = str(esp32.raw_temperature())
     rtemp = ("CPU Temp: " + raw + "F")
     print(rtemp)
+
     rrr = rtemp
     return rrr
 
 
+@micropython.native
 def showVoltage():   # Show current(pun intended) used Voltage
     # noinspection PyUnresolvedReferences
     from machine import ADC, Pin
@@ -51,11 +100,12 @@ def showVoltage():   # Show current(pun intended) used Voltage
     return ddd
 
 
+@micropython.viper
 def getmac():   # Get and display chip MAC address
     import network
     import ubinascii
     mac = ubinascii.hexlify(network.WLAN(1).config('mac'), ':').decode()
-    print(str(mac))
+    print(str("MAC: " + mac))
 
 
 def pprint():   # Put it all together and PRINT
@@ -65,6 +115,7 @@ def pprint():   # Put it all together and PRINT
     print("-------------------")
     getmac()
     space_free()
+    getram()
     m_freq()
     raw_temp()
     showVoltage()
@@ -72,17 +123,3 @@ def pprint():   # Put it all together and PRINT
     print("")
 
     gc.collect()
-
-
-'''
-N = 200_000
-def time_it(f, n):
-    t0 = utime.ticks_us()
-    f(n)
-    t1 = utime.ticks_us()
-    dt = utime.ticks_diff(t1, t0)
-    fmt = '{:5.3f} sec, {:6.3f} usec/read : {:8.2f} kreads/sec'
-    print(fmt.format(dt * 1e-6, dt / n, n / dt * 1e3))
-
-time_it(showVoltage, N)
-'''

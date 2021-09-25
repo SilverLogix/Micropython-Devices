@@ -71,9 +71,7 @@ YELLOW=color565(255,255,0)
 PURPLE=color565(255,0,255)
 WHITE=color565(255,255,255)
 GRAY=color565(128,128,128)
-@micropython.viper
 def _encode_pos(x,y):return struct.pack(_ENCODE_POS,x,y)
-@micropython.viper
 def _encode_pixel(color):return struct.pack(_ENCODE_PIXEL,color)
 class ST7789:
 	def __init__(A,spi,width,height,reset=_A,dc=_A,cs=_A,backlight=_A,rotation=0):
@@ -83,9 +81,8 @@ class ST7789:
 		A._display_width=A.width=C;A._display_height=A.height=D;A.xstart=0;A.ystart=0;A.spi=spi;A.reset=reset;A.dc=dc;A.cs=cs;A.backlight=B;A._rotation=rotation%4;A.hard_reset();A.soft_reset();A.sleep_mode(False);A._set_color_mode(COLOR_MODE_65K|COLOR_MODE_16BIT);time.sleep_ms(5);A.rotation(A._rotation);A.inversion_mode(True);time.sleep_ms(5);A._write(ST7789_NORON);time.sleep_ms(5)
 		if B is not _A:B.value(1)
 		A.fill(0);A._write(ST7789_DISPON);time.sleep_ms(50)
-	@micropython.native
-	def _write(self,command=_A,data=_A):
-		B=command;A=self
+	def _write(A,command=_A,data=_A):
+		B=command
 		if A.cs:A.cs.off()
 		if B is not _A:A.dc.off();A.spi.write(bytes([B]))
 		if data is not _A:
@@ -101,18 +98,15 @@ class ST7789:
 		time.sleep_ms(15)
 		if A.cs:A.cs.on()
 	def soft_reset(A):A._write(ST7789_SWRESET);time.sleep_ms(15)
-	@micropython.native
-	def sleep_mode(self,value):
-		if value:self._write(ST7789_SLPIN)
-		else:self._write(ST7789_SLPOUT)
+	def sleep_mode(A,value):
+		if value:A._write(ST7789_SLPIN)
+		else:A._write(ST7789_SLPOUT)
 	def inversion_mode(A,value):
 		if value:A._write(ST7789_INVON)
 		else:A._write(ST7789_INVOFF)
-	@micropython.native
-	def _set_color_mode(self,mode):self._write(ST7789_COLMOD,bytes([mode&119]))
-	@micropython.native
-	def rotation(self,rotation):
-		B=rotation;A=self;B%=4;A._rotation=B;D=ROTATIONS[B]
+	def _set_color_mode(A,mode):A._write(ST7789_COLMOD,bytes([mode&119]))
+	def rotation(A,rotation):
+		B=rotation;B%=4;A._rotation=B;D=ROTATIONS[B]
 		if A._display_width==320:C=WIDTH_320
 		elif A._display_width==240:C=WIDTH_240
 		elif A._display_width==135:C=WIDTH_135
@@ -125,47 +119,33 @@ class ST7789:
 		B=start
 		if B<=end<=A.height:A._write(ST7789_RASET,_encode_pos(B+A.ystart,end+A.ystart))
 	def _set_window(A,x0,y0,x1,y1):A._set_columns(x0,x1);A._set_rows(y0,y1);A._write(ST7789_RAMWR)
-	@micropython.native
-	def on(self,aTF=True):self._write(ST7789_DISPON if aTF else ST7789_DISPON)
-	@micropython.native
-	def vline(self,x,y,length,color):self.fill_rect(x,y,1,length,color)
-	@micropython.native
-	def hline(self,x,y,length,color):self.fill_rect(x,y,length,1,color)
-	@micropython.native
-	def pixel(self,x,y,color):self._set_window(x,y,x,y);self._write(_A,_encode_pixel(color))
-	@micropython.native
-	def blit_buffer(self,buffer,x,y,width,height):self._set_window(x,y,x+width-1,y+height-1);self._write(_A,buffer)
-	@micropython.native
-	def rect(self,x,y,w,h,color):B=color;A=self;A.hline(x,y,w,B);A.vline(x,y,h,B);A.vline(x+w-1,y,h,B);A.hline(x,y+h-1,w,B)
-	@micropython.native
-	def fill_rect(self,x,y,width,height,color):
-		C=height;B=width;A=self;A._set_window(x,y,x+B-1,y+C-1);D,E=divmod(B*C,_BUFFER_SIZE);F=_encode_pixel(color);A.dc.on()
+	def vline(A,x,y,length,color):A.fill_rect(x,y,1,length,color)
+	def hline(A,x,y,length,color):A.fill_rect(x,y,length,1,color)
+	def pixel(A,x,y,color):A._set_window(x,y,x,y);A._write(_A,_encode_pixel(color))
+	def blit_buffer(A,buffer,x,y,width,height):A._set_window(x,y,x+width-1,y+height-1);A._write(_A,buffer)
+	def rect(A,x,y,w,h,color):B=color;A.hline(x,y,w,B);A.vline(x,y,h,B);A.vline(x+w-1,y,h,B);A.hline(x,y+h-1,w,B)
+	def fill_rect(A,x,y,width,height,color):
+		C=height;B=width;A._set_window(x,y,x+B-1,y+C-1);D,E=divmod(B*C,_BUFFER_SIZE);F=_encode_pixel(color);A.dc.on()
 		if D:
 			G=F*_BUFFER_SIZE
 			for H in range(D):A._write(_A,G)
 		if E:A._write(_A,F*E)
-	@micropython.native
-	def triangle(self,x0,y0,x1,y1,x2,y2,color):B=color;A=self;A.line(x0,y0,x1,y1,B);A.line(x1,y1,x2,y2,B);A.line(x2,y2,x0,y0,B)
-	@micropython.native
-	def fill(self,color):A=self;A.fill_rect(0,0,A.width,A.height,color)
-	@micropython.native
-	def line(self,x0,y0,x1,y1,color):
-		F=color;D=y1;C=x1;B=y0;A=x0;G=abs(D-B)>abs(C-A)
-		if G:A,B=B,A;C,D=D,C
+	def fill(A,color):A.fill_rect(0,0,A.width,A.height,color)
+	def line(F,x0,y0,x1,y1,color):
+		G=color;D=y1;C=x1;B=y0;A=x0;H=abs(D-B)>abs(C-A)
+		if H:A,B=B,A;C,D=D,C
 		if A>C:A,C=C,A;B,D=D,B
-		H=C-A;J=abs(D-B);E=H//2
-		if B<D:I=1
-		else:I=-1
+		I=C-A;K=abs(D-B);E=I//2
+		if B<D:J=1
+		else:J=-1
 		while A<=C:
-			if G:self.pixel(B,A,F)
-			else:self.pixel(A,B,F)
-			E-=J
-			if E<0:B+=I;E+=H
+			if H:F.pixel(B,A,G)
+			else:F.pixel(A,B,G)
+			E-=K
+			if E<0:B+=J;E+=I
 			A+=1
-	@micropython.native
-	def vscrdef(self,tfa,vsa,bfa):A='>HHH';struct.pack(A,tfa,vsa,bfa);self._write(ST7789_VSCRDEF,struct.pack(A,tfa,vsa,bfa))
-	@micropython.native
-	def vscsad(self,vssa):self._write(ST7789_VSCSAD,struct.pack('>H',vssa))
+	def vscrdef(A,tfa,vsa,bfa):B='>HHH';struct.pack(B,tfa,vsa,bfa);A._write(ST7789_VSCRDEF,struct.pack(B,tfa,vsa,bfa))
+	def vscsad(A,vssa):A._write(ST7789_VSCSAD,struct.pack('>H',vssa))
 	def _text16(E,font,text,x0,y0,color=WHITE,background=BLACK):
 		C=background;B=color;A=font
 		for K in text:
@@ -178,12 +158,28 @@ class ST7789:
 	@micropython.native
 	def text(self,font,text,x0,y0,color=WHITE,background=BLACK):
 		if font.WIDTH==16:self._text16(font,text,x0,y0,color,background)
-	@micropython.native
-	def bitmap(self,bitmap,x,y,index=0):
-		F=index;B=self;A=bitmap;G=A.HEIGHT*A.WIDTH;H=G*2;D=bytearray(H);E=A.BPP*G*F if F>0 else 0
+	def bitmap(B,bitmap,x,y,index=0):
+		F=index;A=bitmap;G=A.HEIGHT*A.WIDTH;H=G*2;D=bytearray(H);E=A.BPP*G*F if F>0 else 0
 		for I in range(0,H,2):
 			C=0
 			for M in range(A.BPP):C<<=1;C|=A.BITMAP[E//8]&1<<7-E%8>0;E+=1
 			L=A.PALETTE[C];D[I]=L&65280>>8;D[I+1]=C&255
 		J=x+A.WIDTH-1;K=y+A.HEIGHT-1
 		if B.width>J and B.height>K:B._set_window(x,y,J,K);B._write(_A,D)
+	@micropython.native
+	def write(self,font,string,x,y,fg=WHITE,bg=BLACK):
+		D=self;A=font;L=A.HEIGHT*A.MAX_WIDTH*2;C=bytearray(L);M=(fg&65280)>>8;N=fg&255;O=(bg&65280)>>8;P=bg&255
+		for Q in string:
+			try:
+				H=A.MAP.index(Q);F=H*A.OFFSET_WIDTH;B=A.OFFSETS[F]
+				if A.OFFSET_WIDTH>1:B=(B<<8)+A.OFFSETS[F+1]
+				if A.OFFSET_WIDTH>2:B=(B<<8)+A.OFFSETS[F+2]
+				G=A.WIDTHS[H];I=G*A.HEIGHT*2
+				for E in range(0,I,2):
+					if A.BITMAPS[B//8]&1<<7-B%8>0:C[E]=M;C[E+1]=N
+					else:C[E]=O;C[E+1]=P
+					B+=1
+				J=x+G-1;K=y+A.HEIGHT-1
+				if D.width>J and D.height>K:D._set_window(x,y,J,K);D._write(_A,C[0:I])
+				x+=G
+			except ValueError:pass

@@ -2,7 +2,7 @@
 
 # noinspection PyUnresolvedReferences
 from micropython import const
-import st7789 as st
+from backup import st7789 as st
 # noinspection PyUnresolvedReferences
 from machine import Pin, SPI
 
