@@ -21,7 +21,9 @@ def profile(f, *args, **kwargs):
         delta = utime.ticks_diff(utime.ticks_us(), t)
         ncalls += 1
         ttime += delta
+        print("")
         print('Function: {} Call count = {} Total time = {:6.3f}ms'.format(f.__name__, ncalls, ttime / 1000))
+        print("")
         return result
 
     return new_func
@@ -31,9 +33,18 @@ def profile(f, *args, **kwargs):
 
 
 @micropython.viper
-def serial_mem(mp: bool):
+def serial_mem(mp: bool):   # Using True displays a map in the serial output
     import micropython
     micropython.mem_info(mp)
+
+
+''' ------------------------------------------------- '''
+
+
+@micropython.native
+def files():
+    import os
+    os.listdir()
 
 
 """ ================================================= """
@@ -119,6 +130,7 @@ def pprint():   # Put it all together and PRINT
     m_freq()
     raw_temp()
     showVoltage()
+    files()
     print("--------------------")
     print("")
 

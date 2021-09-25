@@ -39,7 +39,8 @@ def run():
     while True:
         for rotation in range(4):
             # gc.collect()
-            serial_mem(True)
+            serial_mem(False)
+            print("\n" * 2)
             tft.rotation(rotation)
             tft.fill(st7789.BLACK)
             col_max = tft.width - font.WIDTH * 6
