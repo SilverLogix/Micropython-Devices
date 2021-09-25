@@ -22,7 +22,7 @@ machine.freq(160000000)
 debug.pprint()
 
 
-print("ready")
+print("ready\n")
 
 
 @profile
@@ -34,7 +34,7 @@ def oled_init():
 
 def run():
     tft = oled_init()
-    print("GO")
+    print("GO\n")
 
     while True:
         for rotation in range(4):
