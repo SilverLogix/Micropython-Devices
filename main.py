@@ -1,23 +1,20 @@
-# - #
+# --- #
 
 
-import network
 import socket
-import _thread
+from machine import Timer
 import gc
-import utime
 
-# Customs
-# import ftptiny
-import html as H
-
-
-spinner = ["|", "/", "-", "\\", "|", "/", "-", "\\"]
-for i in spinner:
-    print(spinner)
+import ftptiny
+import html as ht
+import uasyncio
 
 
-def do_connect():
+print(f"MAIN INIT\n")
+
+
+def do_connect_sta():
+    import network
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     if not wlan.isconnected():
@@ -28,60 +25,101 @@ def do_connect():
     print('network config:', wlan.ifconfig())
 
 
-def memget():
-    mf = gc.mem_free()
-    print(f"{mf} free")
+def do_connect_ap():
+    import network
+    ap = network.WLAN(network.AP_IF)
+    ap.active(True)
+    ap.config(essid="TTGO-TEST")
+    if not ap.isconnected():
+        print('Creating network...')
+        while not ap.isconnected():
+            pass
+    print('network config:', ap.ifconfig())
 
 
-do_connect()
+def tick():
+    print("5 Seconds")
 
 
-# Set up server socket
-serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-serversocket.bind(("192.168.1.25", 80))
-
-# Accept maximum of 5 connections at the same time
-serversocket.listen(5)
-
-
-# Thread for handling a client
-def client_thread(clientsocket, n):
-    # Receive maxium of 12 bytes from the client
-    r = clientsocket.recv(4096)
-
-    # If recv() returns with 0 the other end closed the connection
-    if len(r) == 0:
-        clientsocket.close()
+def write(dat):
+    with open('data') as f:
+        f.write(dat)
         return
-    else:
-        # Do something wth the received data...
-        print("Received: {}".format(str(r)))  # uncomment this line to view the HTTP request
-
-    if "GET / " in str(r):
-        # this is a get response for the page
-        # Sends back some data
-        clientsocket.send(H.http + H.index)
-    elif "GET /hello " in str(r):
-
-        clientsocket.send(H.http + f"<html><body><h1> Hello to you too! </h1><br> <a href='/'> go back </a></body></html>")
-    elif "GET /color" in str(r):
-        clientsocket.send(H.http + f"<html><body><h1> You are connection " + str(
-            n) + f"</h1><br> Your browser will send multiple requests <br> <a href='/hello'> hello!</a><br><a href='/color'>change led color!</a></body></html>")
-
-    # Close the socket and terminate the thread
-
-    clientsocket.close()
-    gc.collect()
-    _thread.exit()
 
 
-# Unique data to send back
-c = 1
-while True:
-    # Accept the connection of the clients
-    (clientsocket, address) = serversocket.accept()
-    # Start a new thread to handle the client
-    _thread.start_new_thread(client_thread, (clientsocket, c))
-    c = c + 1
-    # serversocket.close()
+""" -------------------------------------------------- """
+
+try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(("0.0.0.0", 80))
+    s.listen(5)
+except OSError:
+    import machine
+    machine.reset()
+
+
+def web_serv():
+    main_page = (ht.http + ht.title_01 + ht.style + ht.index)
+
+    while True:
+        try:
+            conn, addr = s.accept()
+            req = conn.recv(4096)
+            if len(req) == 0:
+                conn.close()
+                return
+            else:
+                # Do something wth the received data...
+                print("Received: {}".format(str(req)))  # uncomment this line to view the HTTP request
+                gc.collect()
+
+            if "GET / " in str(req):
+                # this is a get response for the page
+                # Sends back some data
+                conn.send(main_page)
+                conn.close()
+
+            if "GET /?led=on " in str(req):
+                print(f"LED on")
+                conn.send(main_page)
+                conn.close()
+
+            if "GET /?led=off " in str(req):
+                print(f"LED on")
+                conn.send(main_page)
+                conn.close()
+
+            if "GET /?reset " in str(req):
+                from machine import deepsleep
+                conn.close()
+                deepsleep(500)
+
+            if "GET /?ftp " in str(req):
+                conn.send(main_page)
+                ftp = ftptiny.FtpTiny()
+                ftp.start()
+                conn.close()
+
+        except OSError:
+            s.close()
+            print('Connection closed')
+
+
+tim = Timer(1)
+tim.init(period=5000, mode=Timer.PERIODIC, callback=lambda t: tick())
+
+do_connect_sta()
+
+print(f"SERVER START\n")
+# web_serv()
+
+uasyncio.start_server(web_serv, '0.0.0.0', 80)
+
+loop = uasyncio.get_event_loop()
+loop.create_task(uasyncio.start_server(web_serv, '0.0.0.0', 80))
+try:
+    loop.run_forever()
+except KeyboardInterrupt:
+    print("closing")
+    loop.close()

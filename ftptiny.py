@@ -67,6 +67,7 @@ class FtpTiny:
   self.thread=0
  def start(self):
   if not self.isrunning:
+   print(f"FTP ONLINE\n")
    self.dorun=True
    tid=_thread.start_new_thread(runserver,(self,))
    self.thread=tid
