@@ -7,7 +7,6 @@ import gc
 
 import ftptiny
 import html as ht
-import uasyncio
 
 
 print(f"MAIN INIT\n")
@@ -112,14 +111,5 @@ tim.init(period=5000, mode=Timer.PERIODIC, callback=lambda t: tick())
 do_connect_sta()
 
 print(f"SERVER START\n")
-# web_serv()
+web_serv()
 
-uasyncio.start_server(web_serv, '0.0.0.0', 80)
-
-loop = uasyncio.get_event_loop()
-loop.create_task(uasyncio.start_server(web_serv, '0.0.0.0', 80))
-try:
-    loop.run_forever()
-except KeyboardInterrupt:
-    print("closing")
-    loop.close()
