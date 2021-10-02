@@ -7,37 +7,39 @@ import gc
 
 import ftptiny
 import html as ht
+from debug import profile
+import debug
 
 
-print(f"MAIN INIT\n")
+print("MAIN INIT\n")
+debug.get_mac()
 
-
+@profile
 def do_connect_sta():
     import network
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     if not wlan.isconnected():
-        print('connecting to network...')
-        wlan.connect('NETGEAR90', 'curlyearth685')
+        print("connecting to network...\n")
+        wlan.connect('QualityInn_Guest', '')
         while not wlan.isconnected():
             pass
-    print('network config:', wlan.ifconfig())
+    print("network config:", wlan.ifconfig())
 
 
+@profile
 def do_connect_ap():
     import network
+    print("Creating network...\n")
     ap = network.WLAN(network.AP_IF)
     ap.active(True)
     ap.config(essid="TTGO-TEST")
-    if not ap.isconnected():
-        print('Creating network...')
-        while not ap.isconnected():
-            pass
-    print('network config:', ap.ifconfig())
+    print("network config:", ap.ifconfig())
 
 
+@profile
 def tick():
-    print("5 Seconds")
+    print("10 Seconds\n")
 
 
 def write(dat):
@@ -51,13 +53,13 @@ def write(dat):
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(("0.0.0.0", 80))
+    s.bind(('0.0.0.0', 80))
     s.listen(5)
 except OSError:
     import machine
     machine.reset()
 
-
+@profile
 def web_serv():
     main_page = (ht.http + ht.title_01 + ht.style + ht.index)
 
@@ -106,9 +108,10 @@ def web_serv():
 
 
 tim = Timer(1)
-tim.init(period=5000, mode=Timer.PERIODIC, callback=lambda t: tick())
+tim.init(period=10_000, mode=Timer.PERIODIC, callback=lambda t: tick())
 
-do_connect_sta()
+do_connect_ap()
+# do_connect_sta()
 
 print(f"SERVER START\n")
 web_serv()
