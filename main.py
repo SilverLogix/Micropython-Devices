@@ -8,6 +8,7 @@ import random
 # Custom imports
 from debug import b_print
 from debug import pro_and_mem
+from debug import profile
 import st7789
 import font
 
@@ -22,8 +23,9 @@ DC = Pin(16, Pin.OUT)
 BL = Pin(4,  Pin.OUT)
 
 
+@profile
 def oled_init():
-    spi = SoftSPI(baudrate=800000000, polarity=1, sck=machine.Pin(18), mosi=machine.Pin(19), miso=Pin(13))
+    spi = SoftSPI(baudrate=80000000, polarity=1, sck=machine.Pin(18), mosi=machine.Pin(19), miso=Pin(13))
     oled = st7789.ST7789(spi, 135, 240, reset=RS, cs=CS, dc=DC, backlight=BL, rotation=0)
     return oled
 

@@ -3,48 +3,48 @@ _A=None
 import time
 from micropython import const
 import ustruct as struct
-ST7789_NOP=const(0)
-ST7789_SWRESET=const(1)
-ST7789_RDDID=const(4)
-ST7789_RDDST=const(9)
-ST7789_SLPIN=const(16)
-ST7789_SLPOUT=const(17)
-ST7789_PTLON=const(18)
-ST7789_NORON=const(19)
-ST7789_INVOFF=const(32)
-ST7789_INVON=const(33)
-ST7789_DISPOFF=const(40)
-ST7789_DISPON=const(41)
-ST7789_CASET=const(42)
-ST7789_RASET=const(43)
-ST7789_RAMWR=const(44)
-ST7789_RAMRD=const(46)
-ST7789_PTLAR=const(48)
-ST7789_VSCRDEF=const(51)
-ST7789_COLMOD=const(58)
-ST7789_MADCTL=const(54)
-ST7789_VSCSAD=const(55)
-ST7789_MADCTL_MY=const(128)
-ST7789_MADCTL_MX=const(64)
-ST7789_MADCTL_MV=const(32)
-ST7789_MADCTL_ML=const(16)
-ST7789_MADCTL_BGR=const(8)
-ST7789_MADCTL_MH=const(4)
-ST7789_MADCTL_RGB=const(0)
-ST7789_RDID1=const(218)
-ST7789_RDID2=const(219)
-ST7789_RDID3=const(220)
-ST7789_RDID4=const(221)
-COLOR_MODE_65K=const(80)
-COLOR_MODE_262K=const(96)
-COLOR_MODE_12BIT=const(3)
-COLOR_MODE_16BIT=const(5)
-COLOR_MODE_18BIT=const(6)
-COLOR_MODE_16M=const(7)
+NOP=const(0)
+SWRESET=const(1)
+RDDID=const(4)
+RDDST=const(9)
+SLPIN=const(16)
+SLPOUT=const(17)
+PTLON=const(18)
+NORON=const(19)
+INVOFF=const(32)
+INVON=const(33)
+DISPOFF=const(40)
+DISPON=const(41)
+CASET=const(42)
+RASET=const(43)
+RAMWR=const(44)
+RAMRD=const(46)
+PTLAR=const(48)
+VSCRDEF=const(51)
+COLMOD=const(58)
+MADCTL=const(54)
+VSCSAD=const(55)
+MY=const(128)
+MX=const(64)
+MV=const(32)
+ML=const(16)
+BGR=const(8)
+MH=const(4)
+RGB=const(0)
+RDID1=const(218)
+RDID2=const(219)
+RDID3=const(220)
+RDID4=const(221)
+C_65K=const(80)
+C_262K=const(96)
+C_12BIT=const(3)
+C_16BIT=const(5)
+C_18BIT=const(6)
+C_16M=const(7)
 _ENCODE_PIXEL='>H'
 _ENCODE_POS='>HH'
 _DECODE_PIXEL='>BBB'
-_BUFFER_SIZE=const(256)
+_BUFF=const(256)
 _BIT7=const(128)
 _BIT6=const(64)
 _BIT5=const(32)
@@ -53,10 +53,10 @@ _BIT3=const(8)
 _BIT2=const(4)
 _BIT1=const(2)
 _BIT0=const(1)
-WIDTH_320=[(320,240,0,0),(240,320,0,0),(320,240,0,0),(240,320,0,0)]
-WIDTH_240=[(240,240,0,0),(240,240,0,0),(240,240,0,80),(240,240,80,0)]
-WIDTH_135=[(135,240,52,40),(240,135,40,53),(135,240,53,40),(240,135,40,52)]
-ROTATIONS=[0,96,192,160]
+W320=[(320,240,0,0),(240,320,0,0),(320,240,0,0),(240,320,0,0)]
+W240=[(240,240,0,0),(240,240,0,0),(240,240,0,80),(240,240,80,0)]
+W135=[(135,240,52,40),(240,135,40,53),(135,240,53,40),(240,135,40,52)]
+ROTS=[0,96,192,160]
 @micropython.native
 def color565(aR,aG,aB):return(aR&248)<<8|(aG&252)<<3|aB>>3
 BLACK=0
@@ -80,53 +80,53 @@ class ST7789:
 		D=height;C=width;B=backlight
 		if D!=240 or C not in[320,240,135]:raise ValueError(_B)
 		if dc is _A:raise ValueError('dc pin is required.')
-		A._display_width=A.width=C;A._display_height=A.height=D;A.xstart=0;A.ystart=0;A.spi=spi;A.reset=reset;A.dc=dc;A.cs=cs;A.backlight=B;A._rotation=rotation%4;A.hard_reset();A.soft_reset();A.sleep_mode(False);A._set_color_mode(COLOR_MODE_65K|COLOR_MODE_16BIT);time.sleep_ms(5);A.rotation(A._rotation);A.inversion_mode(True);time.sleep_ms(5);A._write(ST7789_NORON);time.sleep_ms(5)
+		A._display_width=A.width=C;A._display_height=A.height=D;A.xstart=0;A.ystart=0;A.spi=spi;A.reset=reset;A.dc=dc;A.cs=cs;A.backlight=B;A._rotation=rotation%4;A.hard_reset();A.soft_reset();A.sleep_mode(False);A._set_color_mode(C_65K|C_16BIT);A.rotation(A._rotation);A.inversion_mode(True);A._write(NORON);
 		if B is not _A:B.value(1)
-		A.fill(0);A._write(ST7789_DISPON);time.sleep_ms(50)
+		A.fill(0);A._write(DISPON);time.sleep_ms(1)
 	@micropython.native
 	def _write(self,command=_A,data=_A):
 		B=command;A=self
 		if A.cs:A.cs.off()
-		if B is not _A:A.dc.off();A.spi.write(bytes([B]))
+		if B is not _A:A.dc(0);A.spi.write(bytes([B]))
 		if data is not _A:
 			A.dc.on();A.spi.write(data)
-			if A.cs:A.cs.on()
+			if A.cs:A.cs(1)
 	def hard_reset(A):
-		if A.cs:A.cs.off()
-		if A.reset:A.reset.on()
+		if A.cs:A.cs(0)
+		if A.reset:A.reset(1)
 		time.sleep_ms(5)
-		if A.reset:A.reset.off()
+		if A.reset:A.reset(0)
 		time.sleep_ms(5)
-		if A.reset:A.reset.on()
-		time.sleep_ms(15)
-		if A.cs:A.cs.on()
-	def soft_reset(A):A._write(ST7789_SWRESET);time.sleep_ms(15)
+		if A.reset:A.reset(1)
+		time.sleep_ms(5)
+		if A.cs:A.cs(1)
+	def soft_reset(A):A._write(SWRESET);time.sleep_ms(5)
 	@micropython.native
 	def sleep_mode(self,value):
-		if value:self._write(ST7789_SLPIN)
-		else:self._write(ST7789_SLPOUT)
+		if value:self._write(SLPIN)
+		else:self._write(SLPOUT)
 	def inversion_mode(A,value):
-		if value:A._write(ST7789_INVON)
-		else:A._write(ST7789_INVOFF)
+		if value:A._write(INVON)
+		else:A._write(INVOFF)
 	@micropython.native
-	def _set_color_mode(self,mode):self._write(ST7789_COLMOD,bytes([mode&119]))
+	def _set_color_mode(self,mode):self._write(COLMOD,bytes([mode&119]))
 	@micropython.native
 	def rotation(self,rotation):
-		B=rotation;A=self;B%=4;A._rotation=B;D=ROTATIONS[B]
-		if A._display_width==320:C=WIDTH_320
-		elif A._display_width==240:C=WIDTH_240
-		elif A._display_width==135:C=WIDTH_135
+		B=rotation;A=self;B%=4;A._rotation=B;D=ROTS[B]
+		if A._display_width==320:C=W320
+		elif A._display_width==240:C=W240
+		elif A._display_width==135:C=W135
 		else:raise ValueError(_B)
-		A.width,A.height,A.xstart,A.ystart=C[B];A._write(ST7789_MADCTL,bytes([D]))
+		A.width,A.height,A.xstart,A.ystart=C[B];A._write(MADCTL,bytes([D]))
 	def _set_columns(A,start,end):
 		B=start
-		if B<=end<=A.width:A._write(ST7789_CASET,_encode_pos(B+A.xstart,end+A.xstart))
+		if B<=end<=A.width:A._write(CASET,_encode_pos(B+A.xstart,end+A.xstart))
 	def _set_rows(A,start,end):
 		B=start
-		if B<=end<=A.height:A._write(ST7789_RASET,_encode_pos(B+A.ystart,end+A.ystart))
-	def _set_window(A,x0,y0,x1,y1):A._set_columns(x0,x1);A._set_rows(y0,y1);A._write(ST7789_RAMWR)
+		if B<=end<=A.height:A._write(RASET,_encode_pos(B+A.ystart,end+A.ystart))
+	def _set_window(A,x0,y0,x1,y1):A._set_columns(x0,x1);A._set_rows(y0,y1);A._write(RAMWR)
 	@micropython.native
-	def on(self,aTF=True):self._write(ST7789_DISPON if aTF else ST7789_DISPON)
+	def on(self,aTF=True):self._write(DISPON if aTF else DISPON)
 	@micropython.native
 	def vline(self,x,y,length,color):self.fill_rect(x,y,1,length,color)
 	@micropython.native
@@ -139,9 +139,9 @@ class ST7789:
 	def rect(self,x,y,w,h,color):B=color;A=self;A.hline(x,y,w,B);A.vline(x,y,h,B);A.vline(x+w-1,y,h,B);A.hline(x,y+h-1,w,B)
 	@micropython.native
 	def fill_rect(self,x,y,width,height,color):
-		C=height;B=width;A=self;A._set_window(x,y,x+B-1,y+C-1);D,E=divmod(B*C,_BUFFER_SIZE);F=_encode_pixel(color);A.dc.on()
+		C=height;B=width;A=self;A._set_window(x,y,x+B-1,y+C-1);D,E=divmod(B*C,_BUFF);F=_encode_pixel(color);A.dc.on()
 		if D:
-			G=F*_BUFFER_SIZE
+			G=F*_BUFF
 			for H in range(D):A._write(_A,G)
 		if E:A._write(_A,F*E)
 	@micropython.native
@@ -163,9 +163,9 @@ class ST7789:
 			if E<0:B+=I;E+=H
 			A+=1
 	@micropython.native
-	def vscrdef(self,tfa,vsa,bfa):A='>HHH';struct.pack(A,tfa,vsa,bfa);self._write(ST7789_VSCRDEF,struct.pack(A,tfa,vsa,bfa))
+	def vscrdef(self,tfa,vsa,bfa):A='>HHH';struct.pack(A,tfa,vsa,bfa);self._write(VSCRDEF,struct.pack(A,tfa,vsa,bfa))
 	@micropython.native
-	def vscsad(self,vssa):self._write(ST7789_VSCSAD,struct.pack('>H',vssa))
+	def vscsad(self,vssa):self._write(VSCSAD,struct.pack('>H',vssa))
 	def _text16(E,font,text,x0,y0,color=WHITE,background=BLACK):
 		C=background;B=color;A=font
 		for K in text:
