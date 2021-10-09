@@ -9,7 +9,7 @@ import random
 from debug import b_print
 from debug import pro_and_mem
 from debug import profile
-import st7789
+from src import st7789
 import font
 
 
