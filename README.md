@@ -1,6 +1,6 @@
 ![CI badge](https://img.shields.io/badge/%E2%80%8E-micropython-success?style=flat-square&logo=micropython)
 ![CI badge](https://img.shields.io/github/languages/code-size/silverlogix/MicroPython-TTGO?style=flat-square)
-![CI badge](https://img.shields.io/tokei/lines/github/silverlogix/MicroPython-TTGO?style=flat-square)
+![CI badge](https://img.shields.io/github/commit-activity/m/silverlogix/Micropython-Devices?style=flat-square)
 
 MicroPython for the LilyGo TTGO
 =======================
@@ -10,5 +10,5 @@ MicroPython for the LilyGo TTGO
 </p>
 <h3> </h3>
 <h3>
-<A HREF="https://github.com/SilverLogix/MicroPython-TTGO/releases/tag/v1.1.1">Latest Update</a>
+<A HREF="https://github.com/SilverLogix/MicroPython-TTGO/releases/tag/v1.2.2">Latest Update</a>
 </h3>
