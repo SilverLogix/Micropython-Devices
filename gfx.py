@@ -1,22 +1,20 @@
-# ----------- #
 
-# noinspection PyUnresolvedReferences
+import st7789 as st # noqa
+from machine import Pin, SPI, PWM
 from micropython import const
-import st7789 as st
-# noinspection PyUnresolvedReferences
-from machine import Pin, SPI
 
 
 tft = st.ST7789(
-    SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
+    SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),  # Increased baudrate
     135, 240,
     reset=Pin(23, Pin.OUT),
     cs=Pin(5, Pin.OUT),
     dc=Pin(16, Pin.OUT),
     backlight=Pin(4, Pin.OUT),
     rotation=3)
-tft.init()
 
+ST77XX_DISPOFF = const(0x28)
+ST77XX_DISPON = const(0x29)
 
 BLACK = const(0x0000)
 BLUE = const(0x001F)
@@ -28,11 +26,26 @@ YELLOW = const(0xFFE0)
 WHITE = const(0xFFFF)
 
 
+def off():
+    import gc
+    del tft
+    del st
+    gc.collect()
+
+
+def backlight(n):
+    lit = PWM(Pin(4))
+    lit.freq(1000)
+    lit.duty(1023) # noqa
+    brightness = n  # Adjust this value to set the brightness (0-1023)
+    lit.duty(brightness) # noqa
+
+
 def fill(col):
     tft.fill(col)
 
 
-def text(string: str, x: int, y: int, fg=WHITE, bg=BLACK):
+def text(string, x: int, y: int, fg=WHITE, bg=BLACK):
     import font
     tft.text(font, string, x, y, fg, bg)
 
@@ -204,23 +217,7 @@ def micrologo(col=BLACK):
     tft.text(font, " MICROPYTHON ", int(tft.width() / 2 - 105), int(tft.height() - 18), WHITE, 0)
 
 
-def backlight(swt):
-    global tft
-    if swt == 1:
-        tft = st.ST7789(
-            SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
-            135, 240,
-            reset=Pin(23, Pin.OUT),
-            cs=Pin(5, Pin.OUT),
-            dc=Pin(16, Pin.OUT),
-            backlight=Pin(4, Pin.OUT),
-            rotation=3)
-    if swt == 0:
-        tft = st.ST7789(
-            SPI(1, baudrate=30000000, sck=Pin(18), mosi=Pin(19)),
-            135, 240,
-            reset=Pin(23, Pin.OUT),
-            cs=Pin(5, Pin.OUT),
-            dc=Pin(16, Pin.OUT),
-            backlight=Pin(4, Pin.IN),
-            rotation=3)
+def init():
+    tft.init()
+    backlight(1023)
+    backlight(1023)

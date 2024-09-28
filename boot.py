@@ -1,11 +1,14 @@
-import micropython
+
 import machine
-# noinspection PyUnresolvedReferences
-from machine import Pin
+import debug
+import gfx
 
-# noinspection PyArgumentList
-machine.freq(240000000)
-micropython.alloc_emergency_exception_buf(100)
 
-print(str('Booting...'))
-btn = Pin(35, Pin.IN)  # Gpio 35 as button
+machine.freq(80_000000)  # 240_
+
+gfx.init()
+gfx.boot(gfx.RED)
+
+debug.bug_boot()
+
+del debug
