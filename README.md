@@ -10,5 +10,5 @@ MicroPython for the LilyGo TTGO
 </p>
 <h3> </h3>
 <h3>
-<A HREF="https://github.com/SilverLogix/MicroPython-TTGO/releases/tag/v1.1">Latest Update</a>
+<A HREF="https://github.com/SilverLogix/MicroPython-TTGO/releases/tag/v1.1.1">Latest Update</a>
 </h3>

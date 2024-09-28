@@ -1,22 +1,14 @@
-import micropython
-import gc
+
 import machine
+import debug
 import gfx
-import webrepl
-from utime import sleep_ms
 
 
-# DO NOT GO BELOW 80Mhz!!!  Will break wifi and complicate serial!
-# noinspection PyArgumentList
-machine.freq(240000000)
-sleep_ms(100)
+machine.freq(80_000000)  # 240_
 
-micropython.alloc_emergency_exception_buf(100)
-print('Booting...')
+gfx.init()
+gfx.boot(gfx.RED)
 
-gfx.boot()
+debug.bug_boot()
 
-webrepl.start(password="password")
-
-gc.enable()
-gc.collect()
+del debug
